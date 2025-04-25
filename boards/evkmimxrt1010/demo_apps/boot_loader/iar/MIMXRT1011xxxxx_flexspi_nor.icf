@@ -28,7 +28,7 @@ define symbol m_interrupts_start       = 0x60002000;
 define symbol m_interrupts_end         = 0x600023FF;
 
 define symbol m_text_start             = 0x60002400;
-define symbol m_text_end               = 0x60FFFFFF;
+define symbol m_text_end               = 0x6001FFFF;
 
 define symbol m_interrupts_ram_start   = 0x20000000;
 define symbol m_interrupts_ram_end     = 0x20000000 + __ram_vector_table_offset__;
@@ -41,6 +41,9 @@ define symbol m_data2_end              = 0x2020FFFF;
 
 define symbol m_qacode_start           = 0x00000000;
 define symbol m_qacode_end             = 0x00007FFF;
+
+define exported symbol app_image_start     = 0x60020000;
+define exported symbol app_image_end       = 0x60FFFFFF;
 
 define exported symbol m_boot_hdr_conf_start = 0x60000400;
 define symbol m_boot_hdr_ivt_start           = 0x60001000;
@@ -83,6 +86,9 @@ define block NCACHE_VAR    { section NonCacheable , section NonCacheable.init };
 define block QACCESS_CODE  { section CodeQuickAccess };
 define block QACCESS_DATA  { section DataQuickAccess };
 
+define region app_region = mem:[from app_image_start to app_image_end];
+define block APP_IMAGE_BLOCK          { section  __app_image };
+
 initialize by copy { readwrite, section .textrw, section CodeQuickAccess, section DataQuickAccess};
 do not initialize  { section .noinit };
 
@@ -99,6 +105,7 @@ place in DATA_region                        { block RW };
 place in DATA_region                        { block ZI };
 place in DATA_region                        { last block HEAP };
 place in DATA_region                        { block NCACHE_VAR };
+place in app_region                         { block APP_IMAGE_BLOCK };
 place in CSTACK_region                      { block CSTACK };
 place in QACODE_region                      { block QACCESS_CODE };
 place in DATA_region                        { block QACCESS_DATA };
