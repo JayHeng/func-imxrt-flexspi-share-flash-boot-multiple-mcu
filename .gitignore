@@ -37,6 +37,7 @@
 */*/*/*/*/opt_mix_ram_release/
 
 */*/*/*/*/ram_0x1400/
+*/*/*/*/*/ram_0x2000/
 */*/*/*/*/flexspi_nor_boot/
 */*/*/*/*/flexspi_nor_app/
 
