@@ -44,6 +44,8 @@ extern "C" {
  */
 void BOARD_InitBootPins(void);
 
+#define BOARD_INITPINS_IOMUXC_GPR_GPR26_GPIO_SEL_MASK 0x0800U /*!< Select GPIO1 or GPIO2: affected bits mask */
+
 /* GPIO_09 (number 3), LPUART1_RXD */
 /* Routed pin properties */
 #define BOARD_LPUART1_RXD_PERIPHERAL                                     LPUART1   /*!< Peripheral name */

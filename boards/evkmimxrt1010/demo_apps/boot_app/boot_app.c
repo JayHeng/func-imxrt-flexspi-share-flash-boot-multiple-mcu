@@ -8,12 +8,27 @@
 
 #include "fsl_device_registers.h"
 #include "fsl_debug_console.h"
+#include "fsl_iomuxc.h"
+#include "fsl_gpio.h"
 #include "board.h"
 #include "app.h"
+#include "pin_mux.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+
+/*
+ * App mode definition.
+ */
+typedef enum _app_mode
+{
+    APP_ReleaseSlaveMcu = 0,
+    APP_BlinkyLed       = 1,
+    APP_AccessFlash     = 2,
+    
+    APP_ModeEnd = APP_AccessFlash
+} app_mode_t;
 
 /*******************************************************************************
  * Prototypes
@@ -23,9 +38,88 @@
  * Variables
  ******************************************************************************/
 
+static app_mode_t s_targetAppMode;
+
+volatile uint32_t g_systickCounter;
+
 /*******************************************************************************
  * Code
  ******************************************************************************/
+
+void bsp_init_func_gpio(void) 
+{
+    gpio_pin_config_t GPIO_11_config = {
+        .direction = kGPIO_DigitalOutput,
+        .outputLogic = 0U,
+        .interruptMode = kGPIO_NoIntmode
+    };
+    GPIO_PinInit(GPIO1, 11U, &GPIO_11_config);
+    IOMUXC_SetPinMux(IOMUXC_GPIO_11_GPIOMUX_IO11, 0U); 
+    IOMUXC_GPR->GPR26 = ((IOMUXC_GPR->GPR26 &
+      (~(BOARD_INITPINS_IOMUXC_GPR_GPR26_GPIO_SEL_MASK))) 
+        | IOMUXC_GPR_GPR26_GPIO_SEL(0x00U)      
+      );
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_11_GPIOMUX_IO11, 0x10A0U); 
+}
+
+void bsp_hold_slave_mcu(void) 
+{
+    GPIO_PinWrite(GPIO1, 11, 0U);
+}
+
+void bsp_release_slave_mcu(void) 
+{
+    GPIO_PinWrite(GPIO1, 11, 1U);
+}
+
+void SysTick_Handler(void)
+{
+    if (g_systickCounter != 0U)
+    {
+        g_systickCounter--;
+    }
+    else
+    {
+        g_systickCounter = 1000U;
+        GPIO_PortToggle(GPIO1, 1 << 11);
+    }
+}
+
+void bsp_init_SysTick(void)
+{
+    g_systickCounter = 1000U;
+    /* Set systick reload value to generate 1ms interrupt */
+    if (SysTick_Config(SystemCoreClock / 1000U))
+    {
+        while (1)
+        {
+        }
+    }
+}
+
+void APP_ModeSwitch(app_mode_t targetAppMode)
+{
+    switch (targetAppMode)
+    {
+        case APP_ReleaseSlaveMcu:
+            PRINTF(" - Release Slave MCU mode\r\n");
+            bsp_init_func_gpio();
+            bsp_release_slave_mcu();
+            break;
+        case APP_BlinkyLed:
+            PRINTF("- Blinky LED mode\r\n");
+            bsp_init_func_gpio();
+            bsp_init_SysTick();
+            break;
+        case APP_AccessFlash:
+            PRINTF("- Access Flash mode\r\n");
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
 /*!
  * @brief Main function
  */
@@ -36,11 +130,34 @@ int main(void)
     /* Init board hardware. */
     BOARD_InitHardware();
 
+    PRINTF("\r\n---------------------------------------.\r\n");
     PRINTF("Hello boot_app.\r\n");
 
     while (1)
     {
+        PRINTF("\r\nSelect the desired operation \r\n");
+        PRINTF("Press  %c for enter: Release Slave MCU mode\r\n",
+               (uint8_t)'A' + (uint8_t)APP_ReleaseSlaveMcu);
+        PRINTF("Press  %c for enter: Blinky LED mode\r\n",
+               (uint8_t)'A' + (uint8_t)APP_BlinkyLed);
+        PRINTF("Press  %c for enter: Access Flash mode\r\n",
+               (uint8_t)'A' + (uint8_t)APP_AccessFlash);
+        PRINTF("Waiting for app mode select...\r\n");
+
+        /* Wait for user response */
         ch = GETCHAR();
-        PUTCHAR(ch);
+
+        if ((ch >= 'a') && (ch <= 'z'))
+        {
+            ch -= 'a' - 'A';
+        }
+
+        s_targetAppMode = (app_mode_t)(ch - 'A');
+
+        if (s_targetAppMode <= APP_ModeEnd)
+        {
+            APP_ModeSwitch(s_targetAppMode);
+        }
+        PRINTF("Next loop\r\n");
     }
 }

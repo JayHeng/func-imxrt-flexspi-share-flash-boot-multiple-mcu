@@ -84,16 +84,18 @@ int main(void)
     /* Init board hardware. */
     BOARD_InitHardware();
 
+    PRINTF("\r\n---------------------------------------.\r\n");
     PRINTF("Hello boot_loader.\r\n");
 
     uint32_t app_image_size;
     app_image_size = get_app_image_size();
-    (void)PRINTF("Copy app image to address: 0x%x, size: %d\r\n", (void *)(char *)APP_BOOT_ADDRESS,
+    (void)PRINTF("Copy boot_app image to address: 0x%x, size: %d\r\n", (void *)(char *)APP_BOOT_ADDRESS,
                  app_image_size);
 
     /* Copy application from FLASH to the target memory. */
     (void)memcpy((void *)(char *)APP_BOOT_ADDRESS, (void *)APP_IMAGE_START, app_image_size);
-    
+
+    PRINTF("Jump into boot_app.\r\n");
     jump_to_app();
 
     while (1)
