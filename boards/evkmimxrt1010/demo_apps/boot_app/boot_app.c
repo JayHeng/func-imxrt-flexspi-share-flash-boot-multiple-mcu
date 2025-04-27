@@ -62,6 +62,42 @@ void bsp_init_func_gpio(void)
     IOMUXC_SetPinConfig(IOMUXC_GPIO_11_GPIOMUX_IO11, 0x10A0U); 
 }
 
+void bsp_deinit_flexspi_pins(void) 
+{
+    // SW_MUX_CTL
+    // bit4 - SION
+    //     0 DISABLED — Input Path is determined by functionality
+    // bit2-0 - MUX_MODE
+    //     101 ALT5 — Select mux mode: ALT5 mux port: GPIO
+    IOMUXC_SetPinMux(IOMUXC_GPIO_SD_06_GPIO2_IO06, 0U); 
+    IOMUXC_SetPinMux(IOMUXC_GPIO_SD_07_GPIO2_IO07, 0U); 
+    IOMUXC_SetPinMux(IOMUXC_GPIO_SD_09_GPIO2_IO09, 0U); 
+    IOMUXC_SetPinMux(IOMUXC_GPIO_SD_10_GPIO2_IO10, 0U);
+    // SW_PAD_CTL
+    // bit16 - HYS
+    //     0 HYS_0_Hysteresis_Disabled — Hysteresis Disabled
+    // bit15-14 - PUS
+    //     00 PUS_0_100K_Ohm_Pull_Down — 100K Ohm Pull Down
+    // bit13 - PUE
+    //     0 PUE_0_Keeper — Keeper
+    // bit12 - PKE
+    //     1 PKE_1_Pull_Keeper_Enabled — Pull/Keeper Enabled
+    // bit11 - ODE
+    //     0 ODE_0_Open_Drain_Disabled — Open Drain Disabled
+    // bit10-8 reserved
+    // bit7-6 - SPEED
+    //     10 SPEED_2_fast_150MHz — fast(150MHz)
+    // bit5-3 - DSE
+    //     100 DSE_4_R0_4 — R0/4
+    // bit2-1 reserved
+    // bit0 - SRE
+    //     0 SRE_0_Slow_Slew_Rate — Slow Slew Rate
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_06_GPIO2_IO06, 0x10A0U);
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_07_GPIO2_IO07, 0x10A0U);
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_09_GPIO2_IO09, 0x10A0U);
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_10_GPIO2_IO10, 0x10A0U);
+}
+
 void bsp_hold_slave_mcu(void) 
 {
     GPIO_PinWrite(GPIO1, 11, 0U);
@@ -103,6 +139,7 @@ void APP_ModeSwitch(app_mode_t targetAppMode)
     {
         case APP_ReleaseSlaveMcu:
             PRINTF(" - Release Slave MCU mode\r\n");
+            bsp_deinit_flexspi_pins();
             bsp_init_func_gpio();
             bsp_release_slave_mcu();
             break;
