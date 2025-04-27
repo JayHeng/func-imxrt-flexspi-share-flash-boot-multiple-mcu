@@ -1395,6 +1395,12 @@
             <name>$PROJ_DIR$\..\..\..\..\..\devices\MIMXRT1011\drivers\fsl_dcdc.h</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\..\..\..\devices\MIMXRT1011\drivers\fsl_flexspi.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\..\..\devices\MIMXRT1011\drivers\fsl_flexspi.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\..\..\..\devices\MIMXRT1011\drivers\fsl_gpc.c</name>
         </file>
         <file>
@@ -1432,6 +1438,12 @@
         <name>source</name>
         <file>
             <name>$PROJ_DIR$\..\boot_app.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\flexspi_nor_flash_ops.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\flexspi_nor_polling_transfer.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\mcux_config.h</name>

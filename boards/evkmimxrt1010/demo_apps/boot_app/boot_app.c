@@ -34,6 +34,8 @@ typedef enum _app_mode
  * Prototypes
  ******************************************************************************/
 
+int bsp_rw_nor_flash(void);
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -150,6 +152,7 @@ void APP_ModeSwitch(app_mode_t targetAppMode)
             break;
         case APP_AccessFlash:
             PRINTF("- Access Flash mode\r\n");
+            bsp_rw_nor_flash();
             break;
         default:
             assert(false);
