@@ -34,7 +34,7 @@ typedef enum _app_mode
  * Prototypes
  ******************************************************************************/
 
-int bsp_rw_nor_flash(void);
+status_t bsp_rw_nor_flash(void);
 
 /*******************************************************************************
  * Variables
@@ -135,23 +135,35 @@ void bsp_init_SysTick(void)
     }
 }
 
+void bsp_init_flexspi_pins(void) 
+{
+    IOMUXC_SetPinMux(IOMUXC_GPIO_SD_06_FLEXSPI_A_SS0_B, 1U); 
+    IOMUXC_SetPinMux(IOMUXC_GPIO_SD_07_FLEXSPI_A_DATA1, 1U); 
+    IOMUXC_SetPinMux(IOMUXC_GPIO_SD_09_FLEXSPI_A_DATA0, 1U); 
+    IOMUXC_SetPinMux(IOMUXC_GPIO_SD_10_FLEXSPI_A_SCLK, 1U); 
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_06_FLEXSPI_A_SS0_B, 0x10E1U); 
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_07_FLEXSPI_A_DATA1, 0x10E1U); 
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_09_FLEXSPI_A_DATA0, 0x10E1U); 
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_10_FLEXSPI_A_SCLK, 0x10E1U); 
+}
+
 void APP_ModeSwitch(app_mode_t targetAppMode)
 {
     switch (targetAppMode)
     {
         case APP_ReleaseSlaveMcu:
-            PRINTF(" - Release Slave MCU mode\r\n");
+            PRINTF("- Release Slave MCU mode\r\n");
             bsp_deinit_flexspi_pins();
-            bsp_init_func_gpio();
             bsp_release_slave_mcu();
             break;
         case APP_BlinkyLed:
             PRINTF("- Blinky LED mode\r\n");
-            bsp_init_func_gpio();
             bsp_init_SysTick();
             break;
         case APP_AccessFlash:
-            PRINTF("- Access Flash mode\r\n");
+            PRINTF("- Access NOR Flash mode\r\n");
+            bsp_hold_slave_mcu();
+            bsp_init_flexspi_pins();
             bsp_rw_nor_flash();
             break;
         default:
@@ -169,6 +181,7 @@ int main(void)
 
     /* Init board hardware. */
     BOARD_InitHardware();
+    bsp_init_func_gpio();
 
     PRINTF("\r\n---------------------------------------.\r\n");
     PRINTF("Hello boot_app.\r\n");
@@ -180,7 +193,7 @@ int main(void)
                (uint8_t)'A' + (uint8_t)APP_ReleaseSlaveMcu);
         PRINTF("Press  %c for enter: Blinky LED mode\r\n",
                (uint8_t)'A' + (uint8_t)APP_BlinkyLed);
-        PRINTF("Press  %c for enter: Access Flash mode\r\n",
+        PRINTF("Press  %c for enter: Access NOR Flash mode\r\n",
                (uint8_t)'A' + (uint8_t)APP_AccessFlash);
         PRINTF("Waiting for app mode select...\r\n");
 

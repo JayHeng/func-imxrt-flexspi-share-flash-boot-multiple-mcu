@@ -30,23 +30,19 @@ static uint8_t s_nor_read_buffer[256];
 extern status_t flexspi_nor_flash_erase_sector(FLEXSPI_Type *base, uint32_t address);
 extern status_t flexspi_nor_flash_page_program(FLEXSPI_Type *base, uint32_t dstAddr, const uint32_t *src);
 extern status_t flexspi_nor_get_vendor_id(FLEXSPI_Type *base, uint8_t *vendorId);
-extern status_t flexspi_nor_enable_quad_mode(FLEXSPI_Type *base);
-extern status_t flexspi_nor_erase_chip(FLEXSPI_Type *base);
 extern void flexspi_nor_flash_init(FLEXSPI_Type *base);
 /*******************************************************************************
  * Code
  ******************************************************************************/
-int bsp_rw_nor_flash(void)
+status_t bsp_rw_nor_flash(void)
 {
     uint32_t i = 0;
     status_t status;
     uint8_t vendorID = 0;
 
-    BOARD_InitHardware();
-
     flexspi_nor_flash_init(EXAMPLE_FLEXSPI);
 
-    PRINTF("\r\nFLEXSPI example started!\r\n");
+    PRINTF("FLEXSPI example started!\r\n");
 
     /* Get vendor ID. */
     status = flexspi_nor_get_vendor_id(EXAMPLE_FLEXSPI, &vendorID);
@@ -56,33 +52,13 @@ int bsp_rw_nor_flash(void)
     }
     PRINTF("Vendor ID: 0x%x\r\n", vendorID);
 
-#if !(defined(XIP_EXTERNAL_FLASH))
-    /* Erase whole chip . */
-    PRINTF("Erasing whole chip over FlexSPI...\r\n");
-
-    status = flexspi_nor_erase_chip(EXAMPLE_FLEXSPI);
-    if (status != kStatus_Success)
-    {
-        return status;
-    }
-    PRINTF("Erase finished !\r\n");
-
-#endif
-
-    /* Enter quad mode. */
-    status = flexspi_nor_enable_quad_mode(EXAMPLE_FLEXSPI);
-    if (status != kStatus_Success)
-    {
-        return status;
-    }
-
     /* Erase sectors. */
     PRINTF("Erasing Serial NOR over FlexSPI...\r\n");
     status = flexspi_nor_flash_erase_sector(EXAMPLE_FLEXSPI, EXAMPLE_SECTOR * SECTOR_SIZE);
     if (status != kStatus_Success)
     {
         PRINTF("Erase sector failure !\r\n");
-        return -1;
+        return status;
     }
 
     memset(s_nor_program_buffer, 0xFFU, sizeof(s_nor_program_buffer));
@@ -95,7 +71,7 @@ int bsp_rw_nor_flash(void)
     if (memcmp(s_nor_program_buffer, s_nor_read_buffer, sizeof(s_nor_program_buffer)))
     {
         PRINTF("Erase data -  read out data value incorrect !\r\n ");
-        return -1;
+        return kStatus_Fail;
     }
     else
     {
@@ -112,7 +88,7 @@ int bsp_rw_nor_flash(void)
     if (status != kStatus_Success)
     {
         PRINTF("Page program failure !\r\n");
-        return -1;
+        return status;
     }
 
     DCACHE_InvalidateByRange(EXAMPLE_FLEXSPI_AMBA_BASE + EXAMPLE_SECTOR * SECTOR_SIZE, FLASH_PAGE_SIZE);
@@ -123,14 +99,12 @@ int bsp_rw_nor_flash(void)
     if (memcmp(s_nor_read_buffer, s_nor_program_buffer, sizeof(s_nor_program_buffer)) != 0)
     {
         PRINTF("Program data -  read out data value incorrect !\r\n ");
-        return -1;
+        return kStatus_Fail;
     }
     else
     {
         PRINTF("Program data - successfully. \r\n");
     }
-
-    while (1)
-    {
-    }
+    
+    return kStatus_Success;
 }
